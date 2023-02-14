@@ -70,10 +70,27 @@ def login():
 
     # TODO: Add code here to check the username and password against the database
     # Return error if it doesn't match
+    try:
+        # Connect to the database
+        conn = mysql.connect()
+        cursor = conn.cursor()
+
+        # check the user's sign in information
+        sql = "SELECT username, password FROM users WHERE users.username = username"
+        cursor.execute(sql, (username, password))
+        if cursor.fetchone() == None:
+            return jsonify({"success": False, "error": "No such user"})
+        conn.commit()
+
+        # Close the database connection
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
     # TODO: If the username and password are correct, set the username in the session
-
-    return
+    session['username'] = username
+    return jsonify({"success": True, "error": None})
 
 
 # TODO: Create logout api
@@ -81,13 +98,19 @@ def login():
 # then return a result
 @app.route("/logout", methods=["POST"])
 def logout():
-    return
+    username = request.args.get("username")
+    if 'username' in session and username in session['username']:
+        session.pop('username')
+        return jsonify({"username": username, "error": None})
+    return jsonify({"username": None, "error": None})
+
 
 @app.route("/chat", methods=["POST"])
 def chat():
     # Get the inputs from the request
     user_id = request.json["user_id"]
     question = request.json["question"]
+    username = session.get('username')
 
     # Use OpenAI's language generation API to generate a response
     response = openai.Completion.create(
@@ -104,6 +127,21 @@ def chat():
 
     # TODO save the chat history into database
 
+    try:
+        # Connect to the database
+        conn = mysql.connect()
+        cursor = conn.cursor()
+
+        # check the user's sign in information
+        sql = "INSERT INTO history (username,response) VALUES (%s,%s)"
+        cursor.execute(sql, (username, response))
+        conn.commit()
+
+        # Close the database connection
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
     # Return the response as JSON
     return jsonify({"response": response})
 
@@ -111,8 +149,26 @@ def chat():
 # TODO: Create chat_history API that returns chat history for the specified user
 @app.route("/chat_history", methods=["POST"])
 def chat_history():
-    return
+    username = session.get('username')
+    history = []
+    try:
+        # Connect to the database
+        conn = mysql.connect()
+        cursor = conn.cursor()
 
+        # check the user's sign in information
+        sql = "SELECT response FROM history "
+        cursor.execute(sql, (username))
+        for row in cursor:
+            history.append(row)
+        conn.commit()
+
+        # Close the database connection
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+    return jsonify({"history": history})
 
 
 if __name__ == "__main__":

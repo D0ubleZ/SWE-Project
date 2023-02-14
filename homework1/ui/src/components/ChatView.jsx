@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { render } from "react-dom";
 import ChatHistory from "./ChatHistory";
 import LogoutButton from "./LogoutButton";
 
@@ -8,6 +9,18 @@ const ChatView = () => {
   const [history, setHistory] = useState([]);
 
   // TODO: load the chat history for the user and render it on the page
+  ReactDOM.render(
+    <ul className="history-list">
+      {history.map((item, index) => (
+        <li key={index}>
+          <div className="history-item">
+            <div className="history-input">{item.input}</div>
+            <div className="history-output">{item.output}</div>
+          </div>
+        </li>
+      ))}
+    </ul>, 
+  document.getElementById('root'));
 
   const handleInputChange = (event) => {
     setInput(event.target.value);
@@ -24,6 +37,7 @@ const ChatView = () => {
 
   return (
     <div className="chat-view">
+      <div id="root"></div>
       <div className="left-panel">
         <ChatHistory history={history} />
         <LogoutButton></LogoutButton>
