@@ -8,6 +8,7 @@ const ChatView = () => {
   const [output, setOutput] = useState("");
   const [history, setHistory] = useState([]);
 
+  var ReactDOM = require('react-dom');
   // TODO: load the chat history for the user and render it on the page
   ReactDOM.render(
     <ul className="history-list">
