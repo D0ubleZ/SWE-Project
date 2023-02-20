@@ -19,8 +19,8 @@ app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql = MySQL(app)
 
 # Configure the OpenAI API key
-# openai.api_key = "your_openai_api_key"
-openai.api_key = "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"
+openai.api_key = "your_openai_api_key"
+# openai.api_key = ""
 
 
 @app.route('/')
