@@ -19,7 +19,8 @@ app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql = MySQL(app)
 
 # Configure the OpenAI API key
-openai.api_key = "your_openai_api_key"
+# openai.api_key = "your_openai_api_key"
+openai.api_key = "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"
 
 
 @app.route('/')
@@ -67,26 +68,26 @@ def login():
 
     username = request.json.get('username')
     password = request.json.get('password')
-
+    if request.method == 'POST':
     # TODO: Add code here to check the username and password against the database
     # Return error if it doesn't match
-    try:
-        # Connect to the database
-        conn = mysql.connect()
-        cursor = conn.cursor()
+        try:
+            # Connect to the database
+            conn = mysql.connect()
+            cursor = conn.cursor()
 
-        # check the user's sign in information
-        sql = "SELECT username, password FROM users WHERE users.username = username"
-        cursor.execute(sql, (username, password))
-        if cursor.fetchone() == None:
-            return jsonify({"success": False, "error": "No such user"})
-        conn.commit()
+            # check the user's sign in information
+            sql = "SELECT username, password FROM users WHERE users.username = (%s) AND users.password = (%s)"
+            cursor.execute(sql, (username, password))
+            if cursor.fetchone() == None:
+                return jsonify({"success": False, "error": "No such user"})
+            conn.commit()
 
-        # Close the database connection
-        cursor.close()
-        conn.close()
-    except Exception as e:
-        return jsonify({"success": False, "error": str(e)})
+            # Close the database connection
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            return jsonify({"success": False, "error": str(e)})
 
     # TODO: If the username and password are correct, set the username in the session
     session['username'] = username
@@ -108,9 +109,9 @@ def logout():
 @app.route("/chat", methods=["POST"])
 def chat():
     # Get the inputs from the request
-    user_id = request.json["user_id"]
-    question = request.json["question"]
-    username = session.get('username')
+    # user_id = request.json["user_id"]
+    question = request.json["input"]
+    username = request.json['username']
 
     # Use OpenAI's language generation API to generate a response
     response = openai.Completion.create(

@@ -1,6 +1,6 @@
 CREATE TABLE users(
     username VARCHAR(20),
-    password INT,
+    password VARCHAR(20),
     email VARCHAR(50)
 )
 
