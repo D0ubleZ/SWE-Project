@@ -8,59 +8,19 @@ const ChatView = () => {
   const [output, setOutput] = useState("");
   const [history, setHistory] = useState([]);
 
+  let username = localStorage.getItem("username")
+
   // TODO: load the chat history for the user and render it on the page
-  let container = null;
-
-  document.addEventListener('DOMContentLoaded', function(event) {
-    event.preventDefault();
-
-    const username = localStorage.getItem("username");
-    fetch("http://127.0.0.1:5000/chat_history", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        username
-      })
-    })
-      .then((res) => {
-        if (!res.ok) {
-          console.error('Response not OK:', res.status, res.statusText);
-          throw new Error(res.statusText);
-        }
-        return res.json();
-      })
-      .then((data) => {
-        if (data.error) {
-          console.log(data.error);
-        } else {
-          const response = data.response
-          setHistory([...history, { username, response }]);
-        }
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-    
-
-    if (!container) {
-      container = document.getElementById('root1');
-      const root = ReactDOM.createRoot(container)
-      root.render(
-        <ul className="history-list">
-          {history.map((item, index) => (
-            <li key={index}>
-              <div className="history-item">
-                <div className="history-input">{item.input}</div>
-                <div className="history-output">{item.output}</div>
-              </div>
-            </li>
-          ))}
-        </ul>);
-    }
-  });
+  useEffect(() => {
+    fetch(`http://127.0.0.1:4444/chat_history?username=${username}`)
+   .then(response => response.json())
+   .then(data => {
+     if (data !== undefined && data.length > 0) {
+       setHistory(data)
+     }
+   })
+   .catch(error => console.error(error));
+ }, [])
 
   const handleInputChange = (event) => {
     setInput(event.target.value);
@@ -89,18 +49,15 @@ const ChatView = () => {
         return res.json();
       })
       .then((data) => {
-        if (data.error) {
-          console.log(data.error);
-        } else {
-          setOutput(data.response);
-        }
+        setOutput(data.answer);
+        setInput(input);
+        setHistory([...history, { input, output }]);
       })
       .catch((err) => {
         console.error(err);
-      });
-    setInput(input);
-    setHistory([...history, { input, output }]);
+      });  
   };
+
 
   return (
     <div className="chat-view">

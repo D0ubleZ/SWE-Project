@@ -69,8 +69,8 @@ def login():
     username = request.json.get('username')
     password = request.json.get('password')
     if request.method == 'POST':
-    # TODO: Add code here to check the username and password against the database
-    # Return error if it doesn't match
+        # TODO: Add code here to check the username and password against the database
+        # Return error if it doesn't match
         try:
             # Connect to the database
             conn = mysql.connect()
@@ -78,7 +78,7 @@ def login():
 
             # check the user's sign in information
             sql = "SELECT username, password FROM users WHERE users.username = (%s) AND users.password = (%s)"
-            cursor.execute(sql, (username, password))
+            user_data = cursor.execute(sql, (username, password))
             if cursor.fetchone() == None:
                 return jsonify({"success": False, "error": "No such user"})
             conn.commit()
@@ -90,8 +90,12 @@ def login():
             return jsonify({"success": False, "error": str(e)})
 
     # TODO: If the username and password are correct, set the username in the session
-    session['username'] = username
-    return jsonify({"success": True, "error": None})
+    if user_data and user_data['password'] == password:
+        session['username'] = username
+        return jsonify({"username": username, "error": None})
+    else:
+        # if credentials are invalid, return an error
+        return jsonify({"username": None, "error": "Invalid username or password"})
 
 
 # TODO: Create logout api
@@ -134,8 +138,8 @@ def chat():
         cursor = conn.cursor()
 
         # check the user's sign in information
-        sql = "INSERT INTO history (username,response) VALUES (%s,%s)"
-        cursor.execute(sql, (username, response))
+        sql = "INSERT INTO history (username,question, response) VALUES (%s,%s,%s)"
+        cursor.execute(sql, (username, question, response))
         conn.commit()
 
         # Close the database connection
@@ -148,7 +152,7 @@ def chat():
 
 
 # TODO: Create chat_history API that returns chat history for the specified user
-@app.route("/chat_history", methods=["POST"])
+@app.route("/chat_history", methods=["GET"])
 def chat_history():
     username = session.get('username')
     history = []
@@ -158,7 +162,7 @@ def chat_history():
         cursor = conn.cursor()
 
         # check the user's sign in information
-        sql = "SELECT response FROM history "
+        sql = "SELECT response FROM history WHERE username = %s"
         cursor.execute(sql, (username))
         for row in cursor:
             history.append(row)
@@ -169,7 +173,14 @@ def chat_history():
         conn.close()
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
-    return jsonify({"history": history})
+    if history:
+        # Convert the result to a list of dictionaries
+        history_list = [{'question': row[0], 'answer': row[1]}
+                        for row in history]
+    else:
+        history_list = []
+
+    return jsonify(history_list)
 
 
 if __name__ == "__main__":

@@ -6,5 +6,6 @@ CREATE TABLE users(
 
 CREATE TABLE history(
     username VARCHAR(20),
+    question VARCHAR(50),
     response VARCHAR(500)
 )
